@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using WebAPI.Data;
 
 namespace WebAPI.Controllers
 {
@@ -12,17 +13,22 @@ namespace WebAPI.Controllers
             "Atlanta", "New York", "Pune", "Bengaluru"
         };
 
-        private readonly ILogger<CityController> _logger;
+        private readonly DataContext dataContext;
 
-        public CityController(ILogger<CityController> logger)
+        private readonly ILogger<CityController> logger;
+
+        public CityController(ILogger<CityController> logger, DataContext dataContext)
         {
-            _logger = logger;
+            this.logger = logger;
+            this.dataContext = dataContext;
         }
 
-        [HttpGet(Name = "GetCity")]
-        public IEnumerable<string> Get()
+        [HttpGet(Name = "GetAllCity")]
+        public IActionResult Get()
         {
-            return Cities;
+            var cities = dataContext.Cities.ToList() ;
+
+            return Ok(cities);
         }
 
         [HttpGet("{id}")]
