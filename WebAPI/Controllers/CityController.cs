@@ -1,12 +1,12 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using WebAPI.Data;
 
 namespace WebAPI.Controllers
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    public class CityController : ControllerBase
+    [Authorize]
+    public class CityController : BaseController
     {
         private static readonly string[] Cities = new[]
         {
@@ -31,6 +31,7 @@ namespace WebAPI.Controllers
             return Ok(cities);
         }
 
+        [AllowAnonymous]
         [HttpGet("{id}")]
         public string Get(int id)
         {

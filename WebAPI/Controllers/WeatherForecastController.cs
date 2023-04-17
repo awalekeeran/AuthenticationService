@@ -1,10 +1,10 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace WebAPI.Controllers
 {
-    [ApiController]
-    [Route("api/[controller]")]
-    public class WeatherForecastController : ControllerBase
+    [Authorize]
+    public class WeatherForecastController : BaseController
     {
         private static readonly string[] Summaries = new[]
         {
@@ -19,7 +19,7 @@ namespace WebAPI.Controllers
         }
 
         [HttpGet(Name = "GetWeatherForecast")]
-        public IEnumerable<WeatherForecast> Get()
+        public IEnumerable<WeatherForecast> Get(int id)
         {
             return Enumerable.Range(1, 5).Select(index => new WeatherForecast
             {
