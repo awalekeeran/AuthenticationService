@@ -5,6 +5,9 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using WebAPI.Data;
 using WebAPI.Interfaces;
+using WebAPI.Repositories;
+using Microsoft.OpenApi.Models;
+using System.Security.Cryptography.Xml;
 
 namespace WebAPI
 {
@@ -18,6 +21,9 @@ namespace WebAPI
             builder.Services.AddDbContext<DataContext>(options =>
             options.UseSqlServer(builder.Configuration.GetConnectionString("Default")));
 
+            var dbContext = builder.Services.BuildServiceProvider().GetService<DataContext>();
+
+            builder.Services.AddSingleton<IRefreshTokenGenerator>(provider => new RefreshTokenGeneratorRepository(dbContext));
             builder.Services.AddCors();
             builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
@@ -50,7 +56,34 @@ namespace WebAPI
 
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen();
+            builder.Services.AddSwaggerGen(c =>
+            {
+                c.SwaggerDoc("v1", new OpenApiInfo
+                {
+                    Title = "JWT Token",
+                    Version = "v1",
+                });
+                c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme()
+                {
+                    Name = "Authorization",
+                    Type = SecuritySchemeType.ApiKey,
+                    Scheme = "Bearer",
+                    BearerFormat = "JWT",
+                    In = ParameterLocation.Header,
+                    Description = "JWT Authorization header using Bearer scheme \r\n\r\n Enter 'Bearer' [space] and then your token in the text input below.\r\n\r\nExample: \"Bearer 1safsfsdfdfd\""
+                });
+                c.AddSecurityRequirement(new OpenApiSecurityRequirement {
+                    {
+                        new OpenApiSecurityScheme {
+                            Reference = new OpenApiReference {
+                                Type = ReferenceType.SecurityScheme,
+                                    Id = "Bearer"
+                            }
+                        },
+                        new string[] {}
+                    }
+                });
+            });
 
             var app = builder.Build();
 
