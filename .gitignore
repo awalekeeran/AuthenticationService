@@ -4,11 +4,10 @@
 
 /.vs
 /build/
-*.suo
-*.user
-_ReSharper.*/
-*.sdf
-bin/*
-obj/*
+bin
+obj
+/WebAPI/bin
+/WebAPI/obj
 Debug/
 Release/
+/WebAPI/bin/Debug/net6.0/appsettings.json

@@ -1,30 +1,37 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using WebAPI.Data;
 
 namespace WebAPI.Controllers
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    public class CityController : ControllerBase
+    [Authorize]
+    public class CityController : BaseController
     {
         private static readonly string[] Cities = new[]
         {
             "Atlanta", "New York", "Pune", "Bengaluru"
         };
 
-        private readonly ILogger<CityController> _logger;
+        private readonly DataContext dataContext;
 
-        public CityController(ILogger<CityController> logger)
+        private readonly ILogger<CityController> logger;
+
+        public CityController(ILogger<CityController> logger, DataContext dataContext)
         {
-            _logger = logger;
+            this.logger = logger;
+            this.dataContext = dataContext;
         }
 
-        [HttpGet(Name = "GetCity")]
-        public IEnumerable<string> Get()
+        [HttpGet(Name = "GetAllCity")]
+        public IActionResult Get()
         {
-            return Cities;
+            var cities = dataContext.Cities.ToList() ;
+
+            return Ok(cities);
         }
 
+        [AllowAnonymous]
         [HttpGet("{id}")]
         public string Get(int id)
         {
