@@ -2,15 +2,13 @@
 
 namespace WebAPI.Models
 {
-    public class User
+    public class RefreshTokens
     {
         public int ID { get; set; }
 
-        [Required]
-        public string UserName { get; set; }
+        public int UserId { get; set; }
 
-        [Required]
-        public string Password { get; set; }
+        public int TokenId { get; set; }
 
         public string RefreshToken { get; set; }
 

@@ -16,6 +16,8 @@ namespace WebAPI.Data
 
         public IUserRepository UserRepository => new UserRespository(dataContext);
 
+        public IRefreshTokenGenerator RefreshTokenGeneratorRepository => new RefreshTokenGeneratorRepository(dataContext);
+
         public async Task<bool> SaveAsync()
         {
             return await dataContext.SaveChangesAsync() > 0;

@@ -6,6 +6,8 @@
 
         IUserRepository UserRepository { get; }
 
+        IRefreshTokenGenerator RefreshTokenGeneratorRepository { get; }
+
         Task<bool> SaveAsync();
     }
 }
