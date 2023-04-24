@@ -8,6 +8,7 @@ using WebAPI.Interfaces;
 using WebAPI.Repositories;
 using Microsoft.OpenApi.Models;
 using System.Security.Cryptography.Xml;
+using Microsoft.Extensions.FileProviders;
 
 namespace WebAPI
 {
@@ -95,6 +96,13 @@ namespace WebAPI
             }
 
             app.UseCors(m => m.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod());
+
+            app.UseStaticFiles(new StaticFileOptions
+            {
+                FileProvider = new PhysicalFileProvider(
+                    Path.Combine(builder.Environment.ContentRootPath, "Resources", "images")),
+                RequestPath = "/Resources"
+            });
 
             app.UseAuthentication();
 

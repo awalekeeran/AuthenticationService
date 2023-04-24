@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace WebAPI.Controllers
 {
-    [Authorize]
+    //[Authorize]
     public class WeatherForecastController : BaseController
     {
         private static readonly string[] Summaries = new[]
