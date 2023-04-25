@@ -39,7 +39,8 @@ namespace WebAPI.Controllers
 
             foreach (City city in cities)
             {
-                dtos.Add(new CityDTO() { Id = city.Id, Name = city.Name, ImageUrl = ConvertImageToBase64().Item1, CityImage = ConvertImageToBase64().Item2 });
+                (string url, string base64String) image = ConvertImageToBase64();
+                dtos.Add(new CityDTO() { Id = city.Id, Name = city.Name, ImageUrl = image.url, CityImage = image.base64String });
             }
 
             return Ok(dtos);
@@ -52,7 +53,7 @@ namespace WebAPI.Controllers
             return Cities[id];
         }
 
-        private (string,string) ConvertImageToBase64(string imageUrl=null)
+        private (string url, string base64String) ConvertImageToBase64(string imageUrl=null)
         {
             string base64String = string.Empty;
             var fileUrl = Path.Combine("Resources", "images");
@@ -60,12 +61,12 @@ namespace WebAPI.Controllers
             {
                 
                 var webRootPath = this._environment.WebRootPath;
-                var path = Path.Combine(webRootPath, "Resources", "images");
+                var path = Path.Combine(webRootPath, fileUrl);
 
                 if (imageUrl == null)
                 {
                     imageUrl = "defaultProfileImage.png";
-                    fileUrl = string.Concat("/Resources/","images/",imageUrl);
+                    fileUrl = Path.Combine(fileUrl,imageUrl);
                 }
 
                 if (Directory.Exists(path))
@@ -73,7 +74,6 @@ namespace WebAPI.Controllers
                     var fileWithPath = Path.Combine(path, imageUrl);
                     byte[] fileArray = System.IO.File.ReadAllBytes(fileWithPath);
                     base64String = Convert.ToBase64String(fileArray);
-                    Console.WriteLine(base64String);
                 }
             }
             catch (Exception ex)

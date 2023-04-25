@@ -1,11 +1,14 @@
 const PROXY_CONFIG = [
   {
     context: [
-      "weatherforecast",
+      "weatherforecast"
     ],
     target: "http://localhost:5267",
     secure: false,
-    changeOrigin:true
+    changeOrigin: false,
+    pathRewrite: {
+      "^/api/weatherforecast": "/api/v1/WeatherForecast"
+    },
   }
 ]
 
