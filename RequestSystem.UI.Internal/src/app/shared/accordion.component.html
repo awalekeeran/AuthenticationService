@@ -1,0 +1,12 @@
+<div class="panel panel-primary">
+    <div class="panel-heading pointerCursor" (mouseenter)="mouseEnter() " (mouseleave)="mouseLeave()">
+        <!--(click)="isHidden = !isHidden">-->
+        <h3 class="panel-title">
+            {{title}}
+            <ng-content select=".accTitle"></ng-content>
+        </h3>
+    </div>
+    <div class="panel-body" [hidden]="isHidden">
+        <ng-content select=".accBody"></ng-content>
+    </div>
+</div>

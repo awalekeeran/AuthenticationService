@@ -1,6 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Component } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
+import { environment } from './../environments/environment';
 
 @Component({
   selector: 'app-root',
@@ -8,9 +9,13 @@ import { DomSanitizer } from '@angular/platform-browser';
   styleUrls: ['./app.component.css']
 })
 export class AppComponent {
+  title = environment.title;
+  apiURL = environment.apiURL;
+
   public forecasts?: WeatherForecast[];
   public cities?: City[];
 
+  isHidden = false;
   imageUrl: any;
   base64String: string | undefined;
 
@@ -19,16 +24,14 @@ export class AppComponent {
     this.GetAllCity(http);
   }
 
-  title = 'RequestSystem.UI.Internal';
-
   private GetWeatherForecast(http: HttpClient) {
-        http.get<WeatherForecast[]>('/api/weatherforecast').subscribe(result => {
+    http.get<WeatherForecast[]>(this.apiURL + '/weatherforecast').subscribe(result => {
             this.forecasts = result;
         }, error => console.error(error));
   }
 
   private GetAllCity(http: HttpClient) {
-    http.get<City[]>('/api/City').subscribe(result => {
+    http.get<City[]>(this.apiURL + '/City').subscribe(result => {
       this.cities = result;
       this.cities.forEach(city => {
         city.cityImage = this.sanitizer.bypassSecurityTrustResourceUrl(`data:image/png;base64, ${city.cityImage}`)
