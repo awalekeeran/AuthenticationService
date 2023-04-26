@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Component } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
 import { environment } from './../environments/environment';
@@ -17,7 +17,7 @@ export class AppComponent {
 
   isHidden = false;
   imageUrl: any;
-  base64String: string | undefined;
+  base64String: string | undefined;  
 
   constructor(http: HttpClient, private sanitizer: DomSanitizer) {
     this.GetWeatherForecast(http);
