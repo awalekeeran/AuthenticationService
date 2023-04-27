@@ -2,6 +2,8 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Component } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
 import { environment } from './../environments/environment';
+import { AccountService } from './shared/services/account.service';
+import { WeatherForecast, City, Token } from './models/common';
 
 @Component({
   selector: 'app-root',
@@ -12,31 +14,39 @@ export class AppComponent {
   title = environment.title;
   apiURL = environment.apiURL;
 
-  public forecasts?: WeatherForecast[];
-  public cities?: City[];
+  forecasts?: WeatherForecast[];
+  cities?: City[];
 
   isHidden = false;
   imageUrl: any;
   base64String: string | undefined;  
+  sessionStorage!: Token ;
 
-  constructor(http: HttpClient, private sanitizer: DomSanitizer) {
-    this.GetWeatherForecast(http);
-    this.GetAllCity(http);
+  httpClient!: HttpClient;
+
+  constructor(http: HttpClient, private sanitizer: DomSanitizer, private accountService: AccountService) {
+    this.httpClient = http;
+
+    this.AuthenticateUser();
+    this.GetWeatherForecast();
+    this.GetAllCity();
   }
+  AuthenticateUser() {
+    this.accountService.login();
+    }
 
-  private GetWeatherForecast(http: HttpClient) {
-    http.get<WeatherForecast[]>(this.apiURL + '/weatherforecast').subscribe(result => {
+  private GetWeatherForecast() {
+    this.httpClient.get<WeatherForecast[]>(this.apiURL + '/weatherforecast').subscribe(result => {
             this.forecasts = result;
         }, error => console.error(error));
   }
 
-  private GetAllCity(http: HttpClient) {
-    http.get<City[]>(this.apiURL + '/City').subscribe(result => {
+  private GetAllCity() {
+    this.httpClient.get<City[]>(this.apiURL + '/City').subscribe(result => {
       this.cities = result;
       this.cities.forEach(city => {
         city.cityImage = this.sanitizer.bypassSecurityTrustResourceUrl(`data:image/png;base64, ${city.cityImage}`)
       });
-      console.log(result);
     }, error => console.error(error));
   }
 
@@ -50,18 +60,4 @@ export class AppComponent {
   private IsValidImage() {
     return this.imageUrl && this.imageUrl.length > 0;
   }
-}
-
-interface WeatherForecast {
-  date: string;
-  temperatureC: number;
-  temperatureF: number;
-  summary: string;
-}
-
-interface City {
-  id: number;
-  name: string;
-  imageUrl: string;
-  cityImage: any;
 }

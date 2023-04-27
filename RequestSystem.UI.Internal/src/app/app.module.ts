@@ -4,7 +4,9 @@ import { BrowserModule } from '@angular/platform-browser';
 
 import { AppComponent } from './app.component';
 import { AccordionComponent } from './shared/accordion.component';
+import { HeaderInterceptor } from './shared/interceptors/header.interceptor';
 import { LoggingInterceptor } from './shared/interceptors/logging.interceptor';
+import { AccountService } from './shared/services/account.service';
 
 @NgModule({
   declarations: [
@@ -15,7 +17,10 @@ import { LoggingInterceptor } from './shared/interceptors/logging.interceptor';
     BrowserModule, HttpClientModule
   ],
   providers: [
-    {provide:HTTP_INTERCEPTORS, useClass: LoggingInterceptor, multi: true}
+    AccountService,
+    { provide: HTTP_INTERCEPTORS, useClass: LoggingInterceptor, multi: true },
+    { provide: HTTP_INTERCEPTORS, useClass: HeaderInterceptor, multi: true }
+   
   ],
   bootstrap: [AppComponent]
 })
