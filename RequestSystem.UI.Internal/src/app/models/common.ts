@@ -1,10 +1,3 @@
-export class WeatherForecast {
-  date!: string;
-  temperatureC!: number;
-  temperatureF!: number;
-  summary!: string;
-}
-
 export class City {
   id!: number;
   name!: string;

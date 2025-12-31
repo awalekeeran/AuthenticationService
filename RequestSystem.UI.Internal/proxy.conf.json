@@ -2,10 +2,7 @@
   "/api/*": {
     "target": "http://localhost:5267",
     "secure": false,
-    "changeOrigin": false, //true for other then localhost
-    "pathRewrite": {
-      "^/api/weatherforecast": "/api/v1/WeatherForecast"
-    },
+    "changeOrigin": false,
     "logLevel": "debug"
   }
 }

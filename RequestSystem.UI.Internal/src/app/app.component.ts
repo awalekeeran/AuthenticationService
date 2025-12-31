@@ -3,7 +3,7 @@ import { Component } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
 import { environment } from './../environments/environment';
 import { AccountService } from './shared/services/account.service';
-import { WeatherForecast, City, Token } from './models/common';
+import { City, Token } from './models/common';
 
 @Component({
   selector: 'app-root',
@@ -14,7 +14,6 @@ export class AppComponent {
   title = environment.title;
   apiURL = environment.apiURL;
 
-  forecasts?: WeatherForecast[];
   cities?: City[];
 
   isHidden = false;
@@ -28,18 +27,11 @@ export class AppComponent {
     this.httpClient = http;
 
     this.AuthenticateUser();
-    this.GetWeatherForecast();
     this.GetAllCity();
   }
   AuthenticateUser() {
     this.accountService.login();
     }
-
-  private GetWeatherForecast() {
-    this.httpClient.get<WeatherForecast[]>(this.apiURL + '/weatherforecast').subscribe(result => {
-            this.forecasts = result;
-        }, error => console.error(error));
-  }
 
   private GetAllCity() {
     this.httpClient.get<City[]>(this.apiURL + '/City').subscribe(result => {
