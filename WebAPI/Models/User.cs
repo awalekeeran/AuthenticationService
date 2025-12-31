@@ -10,7 +10,7 @@ namespace WebAPI.Models
         public string UserName { get; set; }
 
         [Required]
-        public string Password { get; set; }
+        public string PasswordHash { get; set; }
 
         public string RefreshToken { get; set; }
 

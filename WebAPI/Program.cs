@@ -6,6 +6,7 @@ using System.Text;
 using WebAPI.Data;
 using WebAPI.Interfaces;
 using WebAPI.Repositories;
+using WebAPI.Services;
 using Microsoft.OpenApi.Models;
 using System.Security.Cryptography.Xml;
 using Microsoft.Extensions.FileProviders;
@@ -25,6 +26,7 @@ namespace WebAPI
             var dbContext = builder.Services.BuildServiceProvider().GetService<DataContext>();
 
             builder.Services.AddSingleton<IRefreshTokenGenerator>(provider => new RefreshTokenGeneratorRepository(dbContext));
+            builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
             builder.Services.AddCors();
             builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
