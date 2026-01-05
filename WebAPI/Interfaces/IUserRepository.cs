@@ -6,5 +6,6 @@ namespace WebAPI.Interfaces
     {
         Task<User?> Authenticate(string username, string password);
         Task<User?> GetUserByUsername(string username);
+        User GetUserByRefreshToken(string refreshToken);
     }
 }
