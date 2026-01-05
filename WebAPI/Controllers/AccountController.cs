@@ -13,13 +13,15 @@ namespace WebAPI.Controllers
     public class AccountController : BaseController
     {
         public readonly IUnitOfWork unitOfWork;
-        private readonly string expireTime;
+        private readonly int expireTimeInMinutes;
+        private readonly int refreshTokenExpireInDays;
         private readonly string secretKey;
 
         public AccountController(IUnitOfWork unitOfWork, IConfiguration configuration)
         {
             this.unitOfWork = unitOfWork;
-            this.expireTime = configuration.GetSection("AppSettings:TokenExpireInMinutes").Value.ToString();
+            this.expireTimeInMinutes = int.Parse(configuration.GetSection("AppSettings:TokenExpireInMinutes").Value ?? "30");
+            this.refreshTokenExpireInDays = int.Parse(configuration.GetSection("AppSettings:RefreshTokenExpireInDays").Value ?? "7");
             this.secretKey = configuration.GetSection("AppSettings:SecretKey").Value;
         }
 
@@ -30,7 +32,16 @@ namespace WebAPI.Controllers
 
             if (user == null) { return Unauthorized(); }
 
-            var loginRes = new LoginResDTO() { UserName = user.UserName, Token = CreateJWT(user), Expires = string.Concat(this.expireTime," (mins)")  };
+            // Generate new refresh token
+            var refreshToken = unitOfWork.RefreshTokenGeneratorRepository.GenerateToken(user.ID);
+
+            var loginRes = new LoginResDTO() 
+            { 
+                UserName = user.UserName, 
+                Token = CreateJWT(user), 
+                Expires = string.Concat(this.expireTimeInMinutes, " (mins)"),
+                RefreshToken = refreshToken
+            };
 
             return Ok(loginRes);
         }
@@ -51,7 +62,7 @@ namespace WebAPI.Controllers
             var tokenDescriptor = new SecurityTokenDescriptor
             {
                 Subject = new ClaimsIdentity(claims),
-                Expires = DateTime.UtcNow.AddMinutes(1),
+                Expires = DateTime.UtcNow.AddMinutes(this.expireTimeInMinutes),
                 SigningCredentials= signingCredentials
             };
 
@@ -60,6 +71,39 @@ namespace WebAPI.Controllers
             var token = tokenHandler.CreateToken(tokenDescriptor);
 
             return tokenHandler.WriteToken(token);
+        }
+
+        [HttpPost("refresh-token")]
+        public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenRequestDTO request)
+        {
+            if (string.IsNullOrEmpty(request.RefreshToken))
+            {
+                return BadRequest("Refresh token is required");
+            }
+
+            // Validate the refresh token from the database
+            var user = unitOfWork.UserRepository.GetUserByRefreshToken(request.RefreshToken);
+            
+            if (user == null)
+            {
+                return Unauthorized("Invalid refresh token");
+            }
+
+            // Generate new JWT token
+            var newJwtToken = CreateJWT(user);
+
+            // Rotate the refresh token (generate a new one)
+            var newRefreshToken = unitOfWork.RefreshTokenGeneratorRepository.GenerateToken(user.ID);
+
+            var response = new LoginResDTO()
+            {
+                UserName = user.UserName,
+                Token = newJwtToken,
+                Expires = string.Concat(this.expireTimeInMinutes, " (mins)"),
+                RefreshToken = newRefreshToken
+            };
+
+            return Ok(response);
         }
     }
 }

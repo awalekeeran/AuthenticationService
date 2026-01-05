@@ -35,5 +35,10 @@ namespace WebAPI.Repositories
         {
             return await dataContext.Users.FirstOrDefaultAsync(x => x.UserName == username);
         }
+
+        public User GetUserByRefreshToken(string refreshToken)
+        {
+            return dataContext.Users.FirstOrDefault(x => x.RefreshToken == refreshToken && x.IsActive);
+        }
     }
 }
