@@ -140,16 +140,18 @@ namespace WebAPI
                     {
                         context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
                         
+                        var retryAfterSeconds = 0.0;
                         if (context.Lease.TryGetMetadata(MetadataName.RetryAfter, out var retryAfter))
                         {
-                            context.HttpContext.Response.Headers.RetryAfter = retryAfter.TotalSeconds.ToString();
+                            retryAfterSeconds = retryAfter.TotalSeconds;
+                            context.HttpContext.Response.Headers.RetryAfter = retryAfterSeconds.ToString();
                         }
 
                         await context.HttpContext.Response.WriteAsJsonAsync(new
                         {
                             error = "Too many requests",
                             message = "Rate limit exceeded. Please try again later.",
-                            retryAfter = retryAfter?.TotalSeconds
+                            retryAfter = retryAfterSeconds > 0 ? retryAfterSeconds : (double?)null
                         }, cancellationToken: token);
                     };
                 });
