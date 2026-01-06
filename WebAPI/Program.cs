@@ -10,6 +10,10 @@ using WebAPI.Services;
 using Microsoft.OpenApi.Models;
 using System.Security.Cryptography.Xml;
 using Microsoft.Extensions.FileProviders;
+using System.Threading.RateLimiting;
+using Microsoft.AspNetCore.RateLimiting;
+using StackExchange.Redis;
+using WebAPI.Middleware;
 
 namespace WebAPI
 {
@@ -27,6 +31,20 @@ namespace WebAPI
 
             builder.Services.AddSingleton<IRefreshTokenGenerator>(provider => new RefreshTokenGeneratorRepository(dbContext));
             builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
+            
+            // Configure Redis (if enabled)
+            var redisEnabled = builder.Configuration.GetValue<bool>("Redis:Enabled", false);
+            var useRedisForRateLimiting = builder.Configuration.GetValue<bool>("RateLimiting:UseRedis", false);
+            
+            if (redisEnabled && useRedisForRateLimiting)
+            {
+                var redisConfiguration = builder.Configuration.GetValue<string>("Redis:Configuration");
+                var redis = ConnectionMultiplexer.Connect(redisConfiguration);
+                builder.Services.AddSingleton<IConnectionMultiplexer>(redis);
+                
+                var instanceName = builder.Configuration.GetValue<string>("Redis:InstanceName", "RequestSystem_");
+                builder.Services.AddSingleton(new RedisRateLimitStorage(redis, instanceName));
+            }
             
             // Configure CORS with specific origins, methods, and headers
             var corsAllowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? new[] { "http://localhost:4200" };
@@ -52,6 +70,90 @@ namespace WebAPI
             });
             
             builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+
+            // Configure Rate Limiting
+            var rateLimitingEnabled = builder.Configuration.GetValue<bool>("RateLimiting:EnableRateLimiting", true);
+            
+            if (rateLimitingEnabled)
+            {
+                builder.Services.AddRateLimiter(options =>
+                {
+                    // Global policy - applies to all endpoints by default
+                    var globalPermitLimit = builder.Configuration.GetValue<int>("RateLimiting:GlobalPolicy:PermitLimit", 100);
+                    var globalWindow = builder.Configuration.GetValue<int>("RateLimiting:GlobalPolicy:Window", 60);
+                    
+                    options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
+                    {
+                        var clientId = context.Connection.RemoteIpAddress?.ToString() ?? "anonymous";
+                        
+                        return RateLimitPartition.GetFixedWindowLimiter(
+                            partitionKey: clientId,
+                            factory: _ => new FixedWindowRateLimiterOptions
+                            {
+                                PermitLimit = globalPermitLimit,
+                                Window = TimeSpan.FromSeconds(globalWindow),
+                                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                                QueueLimit = 0
+                            });
+                    });
+
+                    // Login endpoint policy - stricter limits for authentication
+                    var loginPermitLimit = builder.Configuration.GetValue<int>("RateLimiting:LoginPolicy:PermitLimit", 5);
+                    var loginWindow = builder.Configuration.GetValue<int>("RateLimiting:LoginPolicy:Window", 60);
+                    
+                    options.AddPolicy("LoginPolicy", context =>
+                    {
+                        var clientId = context.Connection.RemoteIpAddress?.ToString() ?? "anonymous";
+                        
+                        return RateLimitPartition.GetFixedWindowLimiter(
+                            partitionKey: $"login:{clientId}",
+                            factory: _ => new FixedWindowRateLimiterOptions
+                            {
+                                PermitLimit = loginPermitLimit,
+                                Window = TimeSpan.FromSeconds(loginWindow),
+                                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                                QueueLimit = 0
+                            });
+                    });
+
+                    // API endpoint policy - moderate limits
+                    var apiPermitLimit = builder.Configuration.GetValue<int>("RateLimiting:ApiPolicy:PermitLimit", 30);
+                    var apiWindow = builder.Configuration.GetValue<int>("RateLimiting:ApiPolicy:Window", 60);
+                    
+                    options.AddPolicy("ApiPolicy", context =>
+                    {
+                        var clientId = context.Connection.RemoteIpAddress?.ToString() ?? "anonymous";
+                        
+                        return RateLimitPartition.GetFixedWindowLimiter(
+                            partitionKey: $"api:{clientId}",
+                            factory: _ => new FixedWindowRateLimiterOptions
+                            {
+                                PermitLimit = apiPermitLimit,
+                                Window = TimeSpan.FromSeconds(apiWindow),
+                                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                                QueueLimit = 0
+                            });
+                    });
+
+                    // Configure rejection response
+                    options.OnRejected = async (context, token) =>
+                    {
+                        context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+                        
+                        if (context.Lease.TryGetMetadata(MetadataName.RetryAfter, out var retryAfter))
+                        {
+                            context.HttpContext.Response.Headers.RetryAfter = retryAfter.TotalSeconds.ToString();
+                        }
+
+                        await context.HttpContext.Response.WriteAsJsonAsync(new
+                        {
+                            error = "Too many requests",
+                            message = "Rate limit exceeded. Please try again later.",
+                            retryAfter = retryAfter?.TotalSeconds
+                        }, cancellationToken: token);
+                    };
+                });
+            }
 
             var secretKey = builder.Configuration.GetSection("AppSettings:SecretKey").Value;
 
@@ -122,6 +224,12 @@ namespace WebAPI
 
             // Use the configured CORS policy
             app.UseCors("RequestSystemCorsPolicy");
+
+            // Enable rate limiting
+            if (rateLimitingEnabled)
+            {
+                app.UseRateLimiter();
+            }
 
             app.UseStaticFiles(new StaticFileOptions
             {

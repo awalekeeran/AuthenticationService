@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using RequestSystem.API.DTOs;
 using System;
 using System.Linq;
@@ -11,6 +12,7 @@ using WebAPI.Models;
 namespace WebAPI.Controllers
 {
     //[Authorize]
+    [EnableRateLimiting("ApiPolicy")]
     public class CityController : BaseController
     {
         private static readonly string[] Cities = new[]

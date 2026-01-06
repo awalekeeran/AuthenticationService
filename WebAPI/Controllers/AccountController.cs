@@ -7,6 +7,7 @@ using System.Text;
 using WebAPI.DTOs;
 using WebAPI.Interfaces;
 using WebAPI.Models;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace WebAPI.Controllers
 {
@@ -26,6 +27,7 @@ namespace WebAPI.Controllers
         }
 
         [HttpPost("login")]
+        [EnableRateLimiting("LoginPolicy")]
         public async Task<IActionResult> Login(LoginReqDTO loginReqDTO)
         {
             var user = await unitOfWork.UserRepository.Authenticate(loginReqDTO.UserName, loginReqDTO.Password);
@@ -74,6 +76,7 @@ namespace WebAPI.Controllers
         }
 
         [HttpPost("refresh-token")]
+        [EnableRateLimiting("LoginPolicy")]
         public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenRequestDTO request)
         {
             if (string.IsNullOrEmpty(request.RefreshToken))
