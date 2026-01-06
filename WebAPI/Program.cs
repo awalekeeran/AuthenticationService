@@ -27,7 +27,30 @@ namespace WebAPI
 
             builder.Services.AddSingleton<IRefreshTokenGenerator>(provider => new RefreshTokenGeneratorRepository(dbContext));
             builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
-            builder.Services.AddCors();
+            
+            // Configure CORS with specific origins, methods, and headers
+            var corsAllowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? new[] { "http://localhost:4200" };
+            var corsAllowedMethods = builder.Configuration.GetSection("Cors:AllowedMethods").Get<string[]>() ?? new[] { "GET", "POST", "PUT", "DELETE", "OPTIONS" };
+            var corsAllowedHeaders = builder.Configuration.GetSection("Cors:AllowedHeaders").Get<string[]>() ?? new[] { "Content-Type", "Authorization", "Accept" };
+            var corsAllowCredentials = builder.Configuration.GetValue<bool>("Cors:AllowCredentials", true);
+            var corsMaxAge = builder.Configuration.GetValue<int>("Cors:MaxAge", 3600);
+
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("RequestSystemCorsPolicy", policy =>
+                {
+                    policy.WithOrigins(corsAllowedOrigins)
+                          .WithMethods(corsAllowedMethods)
+                          .WithHeaders(corsAllowedHeaders)
+                          .SetPreflightMaxAge(TimeSpan.FromSeconds(corsMaxAge));
+
+                    if (corsAllowCredentials)
+                    {
+                        policy.AllowCredentials();
+                    }
+                });
+            });
+            
             builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
             var secretKey = builder.Configuration.GetSection("AppSettings:SecretKey").Value;
@@ -97,7 +120,8 @@ namespace WebAPI
                 app.UseSwaggerUI();
             }
 
-            app.UseCors(m => m.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod());
+            // Use the configured CORS policy
+            app.UseCors("RequestSystemCorsPolicy");
 
             app.UseStaticFiles(new StaticFileOptions
             {
