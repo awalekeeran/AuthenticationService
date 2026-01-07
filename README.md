@@ -1,4 +1,4 @@
-# Authentication Service
+# Request System (Authentication Service)
 A modern, production-ready authentication service implementing **OAuth 2.0** and **OpenID Connect (OIDC)** using **Duende IdentityServer**, **.NET 8**, **Angular**, **JWT**, and **Redis**.
 
 ## 🏗️ Architecture
