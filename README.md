@@ -1,5 +1,5 @@
 # Request System (Authentication Service)
-A modern, production-ready authentication service implementing **OAuth 2.0** and **OpenID Connect (OIDC)** using **Duende IdentityServer**, **.NET 8**, **Angular**, **JWT**, and **Redis**.
+A modern, production-ready authentication service implementing **OAuth 2.0** and **OpenID Connect (OIDC)** using **Duende IdentityServer**, **.NET 10**, **Angular**, **JWT**, and **Redis**.
 
 ## 🏗️ Architecture
 
@@ -16,7 +16,7 @@ A modern, production-ready authentication service implementing **OAuth 2.0** and
            │ JWT Validation
 ┌──────────▼──────────┐
 │   WebAPI            │  ← Resource Server
-│   (Port 5000)       │     (.NET 8)
+│   (Port 5000)       │     (.NET 10)
 └──────────┬──────────┘
            │
      ┌─────┴─────┐
@@ -35,7 +35,7 @@ A modern, production-ready authentication service implementing **OAuth 2.0** and
                     ↓
 ┌─────────────────────────────────────────────┐
 │  APPLICATION LAYER                           │
-│  - WebAPI (.NET 8)                           │
+│  - WebAPI (.NET 10)                           │
 │  - Authentication Service                    │
 │  - Session Management                        │
 │  - Cache Service                             │
@@ -62,7 +62,7 @@ A modern, production-ready authentication service implementing **OAuth 2.0** and
 ## 🛠️ Technology Stack
 
 ### Backend
-- **.NET 8.0** (LTS) - To be upgraded from .NET 6
+- **.NET 10.0** (LTS) - To be upgraded from .NET 6
 - **Duende IdentityServer 7** - OAuth 2.0 / OIDC provider (To be added)
 - **Entity Framework Core 8** - ORM
 - **SQL Server** - Database
@@ -84,7 +84,7 @@ A modern, production-ready authentication service implementing **OAuth 2.0** and
 
 ### Prerequisites
 
-- .NET 8 SDK (to be installed)
+- .NET 10 SDK (to be installed)
 - Node.js 18+ and npm
 - SQL Server (LocalDB or Express)
 - Docker (for Redis)
@@ -137,7 +137,7 @@ This project serves as a learning platform for:
 - Microservices patterns
 - API gateway patterns
 
-### 5. .NET 8 & Angular
+### 5. .NET 10 & Angular
 - Latest framework features
 - Performance optimizations
 - Modern development patterns
